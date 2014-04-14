@@ -1,0 +1,18 @@
+{
+    "name": "my/babyphotos",
+    "authors": [
+        {
+            "name": "Gavin Wu",
+            "email": "wubenhe@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/console": "v2.4.3",
+        "coderockr/parse": "dev-master"
+    },
+    "autoload":{
+        "psr-0":{
+            "Command":"src/"
+        }
+    }
+}
