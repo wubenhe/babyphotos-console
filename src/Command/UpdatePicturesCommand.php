@@ -69,21 +69,26 @@ class UpdatePicturesCommand extends Command {
        }
     }
     protected function insertPicture(OutputInterface $output, $albumsId, $setId){
+        $albumsIdObjectKey = array("__type" => "Pointer", "className" => "albums", "objectId" => $albumsId);
         $output->writeln('write into picture object for albums id:'.$albumsId.' set id:'.$setId);
         $url = self::FLICKR_API.$this->getApiPhotosBySetConfigure($setId);
         $json = file_get_contents($url);
         $pictures = json_decode($json, TRUE);
         $pictures = $pictures['photoset'];
         $pictures = isset($pictures['photo']) && is_array($pictures['photo']) ? $pictures['photo'] : array();
+        $query = new Query($this->getParseConfig(),'pictures');
+        $query->whereEqualTo('albums_id', $albumsIdObjectKey);
+        $results = $query->find(); 
+        $results = $results->results;
+        $existingPictures = array(); 
+        foreach($results as $result){
+            $existingPictures[$result->picture_id] = $result; 
+        }
+        
         foreach($pictures as $picture){
-            $query = new Query($this->getParseConfig(),'pictures');
-            $query->whereEqualTo('picture_id', $picture['id']);
-            $query->whereEqualTo('albums_id', $albumsId);
-            $results = $query->find(); 
-            $results = $results->results;
-            if(empty($results)){
+            if(!isset($existingPictures[$picture['id']])){
                 $object = $this->getParsePictureObject();
-                $object->albums_id = array("__type" => "Pointer", "className" => "albums", "objectId" => $albumsId); 
+                $object->albums_id = $albumsIdObjectKey; 
                 $object->picture_id = $picture['id'];
                 $object->owner = self::USER_ID; 
                 $object->secret = $picture['secret'];
